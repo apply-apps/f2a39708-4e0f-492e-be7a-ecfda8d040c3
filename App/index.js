@@ -2,143 +2,150 @@
 // Combined code from all files
 
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, Text, View, Button, Alert, ScrollView } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, ScrollView, Button, View, ActivityIndicator, TextInput } from 'react-native';
 
-const CELL_SIZE = 20;
-const BOARD_SIZE = 400;
+const WorkoutForm = () => {
+    const [exercise, setExercise] = useState('');
+    const [reps, setReps] = useState('');
+    const [sets, setSets] = useState('');
 
-const generateFoodPosition = () => {
-  const maxPos = BOARD_SIZE / CELL_SIZE - 1;
-  const x = Math.floor(Math.random() * maxPos) * CELL_SIZE;
-  const y = Math.floor(Math.random() * maxPos) * CELL_SIZE;
-  return { x, y };
+    const handleSubmit = () => {
+        console.log('New Workout:', { exercise, reps, sets });
+    };
+
+    return (
+        <View style={formStyles.form}>
+            <Text style={formStyles.label}>Exercise</Text>
+            <TextInput
+                style={formStyles.input}
+                value={exercise}
+                onChangeText={setExercise}
+                placeholder="Enter Exercise"
+            />
+            <Text style={formStyles.label}>Reps</Text>
+            <TextInput
+                style={formStyles.input}
+                value={reps}
+                onChangeText={setReps}
+                placeholder="Enter Reps"
+            />
+            <Text style={formStyles.label}>Sets</Text>
+            <TextInput
+                style={formStyles.input}
+                value={sets}
+                onChangeText={setSets}
+                placeholder="Enter Sets"
+            />
+            <Button title="Add Workout" onPress={handleSubmit} />
+        </View>
+    );
 };
 
-const SnakeGame = () => {
-  const [snake, setSnake] = useState([{ x: 0, y: 0 }]);
-  const [food, setFood] = useState(generateFoodPosition());
-  const [direction, setDirection] = useState({ x: 20, y: 0 });
-  const [gameOver, setGameOver] = useState(false);
+const WorkoutHistory = () => {
+    const [loading, setLoading] = useState(true);
+    const [workouts, setWorkouts] = useState([]);
 
-  useEffect(() => {
-    const interval = setInterval(moveSnake, 200);
-    return () => clearInterval(interval);
-  }, [snake, direction]);
+    useEffect(() => {
+        setTimeout(() => {
+            setLoading(false);
+            setWorkouts([
+                { id: 1, exercise: 'Push-up', reps: 15, sets: 3 },
+                { id: 2, exercise: 'Squat', reps: 20, sets: 4 },
+                { id: 3, exercise: 'Burpee', reps: 10, sets: 2 },
+            ]);
+        }, 2000);
+    }, []);
 
-  const moveSnake = () => {
-    const newSnake = [...snake];
-    const head = newSnake[0];
-    const newHead = { x: head.x + direction.x, y: head.y + direction.y };
-
-    // Check wall collisions
-    if (newHead.x < 0 || newHead.y < 0 || newHead.x >= BOARD_SIZE || newHead.y >= BOARD_SIZE) {
-      setGameOver(true);
-      Alert.alert("Game Over", "You hit the wall!", [{ text: "Restart", onPress: restartGame }]);
-      return;
+    if (loading) {
+        return <ActivityIndicator size="large" color="#0000ff" />;
     }
 
-    // Check self-collision
-    for (let part of snake) {
-      if (part.x === newHead.x && part.y === newHead.y) {
-        setGameOver(true);
-        Alert.alert("Game Over", "You collided with yourself!", [{ text: "Restart", onPress: restartGame }]);
-        return;
-      }
-    }
-
-    newSnake.unshift(newHead);
-
-    // Check food collision
-    if (newHead.x === food.x && newHead.y === food.y) {
-      setFood(generateFoodPosition());
-    } else {
-      newSnake.pop();
-    }
-
-    setSnake(newSnake);
-  };
-
-  const restartGame = () => {
-    setSnake([{ x: 0, y: 0 }]);
-    setFood(generateFoodPosition());
-    setDirection({ x: 20, y: 0 });
-    setGameOver(false);
-  };
-
-  const handleKeyPress = ({ nativeEvent: { key } }) => {
-    switch (key) {
-      case 'ArrowUp':
-        setDirection({ x: 0, y: -CELL_SIZE });
-        break;
-      case 'ArrowDown':
-        setDirection({ x: 0, y: CELL_SIZE });
-        break;
-      case 'ArrowLeft':
-        setDirection({ x: -CELL_SIZE, y: 0 });
-        break;
-      case 'ArrowRight':
-        setDirection({ x: CELL_SIZE, y: 0 });
-        break;
-      default:
-        break;
-    }
-  };
-
-  return (
-    <ScrollView contentContainerStyle={styles.snakeGameContainer} keyboardShouldPersistTaps='handled'>
-      <View style={styles.board} onKeyDown={handleKeyPress} tabIndex="0">
-        {snake.map((segment, index) => (
-          <View key={index} style={[styles.snake, { left: segment.x, top: segment.y }]} />
-        ))}
-        <View style={[styles.food, { left: food.x, top: food.y }]} />
-      </View>
-      {gameOver && <Button title="Restart" onPress={restartGame} />}
-    </ScrollView>
-  );
+    return (
+        <View style={historyStyles.historyContainer}>
+            <Text style={historyStyles.historyTitle}>Workout History</Text>
+            {workouts.map(workout => (
+                <View key={workout.id} style={historyStyles.workout}>
+                    <Text style={historyStyles.exercise}>{workout.exercise}</Text>
+                    <Text>Reps: {workout.reps}</Text>
+                    <Text>Sets: {workout.sets}</Text>
+                </View>
+            ))}
+        </View>
+    );
 };
 
 const App = () => {
-  return (
-    <SafeAreaView style={styles.appContainer}>
-      <Text style={styles.title}>Snake Game</Text>
-      <SnakeGame />
-    </SafeAreaView>
-  );
+    return (
+        <SafeAreaView style={appStyles.container}>
+            <ScrollView contentContainerStyle={appStyles.scrollView}>
+                <Text style={appStyles.title}>Workout Tracker</Text>
+                <WorkoutForm />
+                <WorkoutHistory />
+            </ScrollView>
+        </SafeAreaView>
+    );
 };
 
-const styles = StyleSheet.create({
-  appContainer: {
-    flex: 1,
-    paddingTop: 20,
-    backgroundColor: '#FFFFFF',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 20,
-  },
-  snakeGameContainer: {
-    alignItems: 'center',
-  },
-  board: {
-    width: BOARD_SIZE,
-    height: BOARD_SIZE,
-    backgroundColor: '#000',
-    position: 'relative',
-  },
-  snake: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
-    backgroundColor: '#0F0',
-    position: 'absolute',
-  },
-  food: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
-    backgroundColor: '#F00',
-    position: 'absolute',
-  },
+const appStyles = StyleSheet.create({
+    container: {
+        flex: 1,
+        marginTop: 20,
+        paddingHorizontal: 20,
+        backgroundColor: '#FFFFFF',
+    },
+    scrollView: {
+        paddingBottom: 20,
+        alignItems: 'center',
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
+});
+
+const formStyles = StyleSheet.create({
+    form: {
+        backgroundColor: '#FFFFFF',
+        padding: 20,
+        borderRadius: 10,
+        marginBottom: 20,
+        width: '100%',
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    input: {
+        padding: 10,
+        borderRadius: 5,
+        borderWidth: 1,
+        borderColor: '#CCCCCC',
+        marginBottom: 10,
+        width: '100%',
+    },
+});
+
+const historyStyles = StyleSheet.create({
+    historyContainer: {
+        backgroundColor: '#FFFFFF',
+        padding: 20,
+        borderRadius: 10,
+        width: '100%',
+    },
+    historyTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    workout: {
+        marginBottom: 10,
+    },
+    exercise: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
 });
 
 export default App;
